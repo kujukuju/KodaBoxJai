@@ -1,3 +1,4 @@
+
 get_valid_polygons :: (polygon: [] Vector2) -> [..] FixedPolygon(b2_maxPolygonVertices) {
     valid: [..] FixedPolygon(b2_maxPolygonVertices);
 
@@ -21,7 +22,7 @@ get_valid_polygons :: (polygon: [] Vector2) -> [..] FixedPolygon(b2_maxPolygonVe
                         fixed: FixedPolygon(b2_maxPolygonVertices);
                         fixed.count = divided.count;
                         for i: 0..divided.count - 1 {
-                            fixed.vertices[i] = divided[i] / world_scale;
+                            fixed.vertices[i] = divided.vertices[i] / world_scale;
                         }
 
                         array_add(*valid, fixed);
@@ -52,7 +53,7 @@ get_valid_polygons :: (polygon: [] Vector2) -> [..] FixedPolygon(b2_maxPolygonVe
                     fixed: FixedPolygon(b2_maxPolygonVertices);
                     fixed.count = divided.count;
                     for i: 0..divided.count - 1 {
-                        fixed.vertices[i] = divided[i] / world_scale;
+                        fixed.vertices[i] = divided.vertices[i] / world_scale;
                     }
 
                     array_add(*valid, fixed);
@@ -66,6 +67,29 @@ get_valid_polygons :: (polygon: [] Vector2) -> [..] FixedPolygon(b2_maxPolygonVe
 
                 array_add(*valid, fixed);
             }
+        }
+    } else {
+        if polygon.count > b2_maxPolygonVertices {
+            divided_list := split_convex_polygon(polygon, b2_maxPolygonVertices);
+            defer array_free(divided_list);
+
+            for divided: divided_list {
+                fixed: FixedPolygon(b2_maxPolygonVertices);
+                fixed.count = divided.count;
+                for i: 0..divided.count - 1 {
+                    fixed.vertices[i] = divided.vertices[i] / world_scale;
+                }
+
+                array_add(*valid, fixed);
+            }
+        } else {
+            fixed: FixedPolygon(b2_maxPolygonVertices);
+            fixed.count = polygon.count;
+            for i: 0..polygon.count - 1 {
+                fixed.vertices[i] = polygon[i] / world_scale;
+            }
+
+            array_add(*valid, fixed);
         }
     }
 

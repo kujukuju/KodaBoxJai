@@ -37,6 +37,8 @@ add_polygon :: (body: *Body, polygon: [] Vector2, density: float = 1, friction: 
     valid_polygons := get_valid_polygons(polygon);
     defer array_free(valid_polygons);
 
+    print("valid %\n", valid_polygons);
+
     for valid_polygon: valid_polygons {
         fixture_def := FixtureDef_create();
         fixture_def.density = density;
@@ -44,7 +46,7 @@ add_polygon :: (body: *Body, polygon: [] Vector2, density: float = 1, friction: 
         fixture_def.restitution = restitution;
 
         polygon_shape := PolygonShape_create();
-        PolygonShape_set(*polygon_shape, valid_polygon.vertices.data, valid_polygon.count);
+        PolygonShape_set(*polygon_shape, valid_polygon.vertices.data, xx valid_polygon.count);
         fixture_def.shape = *polygon_shape;
 
         Body_create_fixture(body.data, *fixture_def);

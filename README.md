@@ -75,3 +75,9 @@ get_world_vector :: (body: Body, local_vector: Vector2) -> Vector2;
 get_local_vector :: (body: Body, world_vector: Vector2) -> Vector2;
 // TODO automatically toggle on/off is_bullet based on radius and speed
 ```
+
+## Debug
+```jai
+set_draw_shapes :: (enabled: bool);
+draw :: ();
+```
