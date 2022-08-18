@@ -9,10 +9,10 @@ Body :: struct {
 }
 
 create_body :: (type: BodyType) -> Body {
-    assert(world, "You must initialize the library before doing anything.");
+    assert(!!world, "You must initialize the library before doing anything.");
 
     body_def := BodyDef_create();
-    if type == #complete {
+    if #complete type == {
         case .Static;
             body_def.type = .b2_staticBody;
         case .Kinematic;
@@ -24,11 +24,13 @@ create_body :: (type: BodyType) -> Body {
     body_def.angularDamping = 0;
 
     body: Body;
-    body.data = World_create_body(*body_def);
+    body.data = World_create_body(world, *body_def);
+
+    return body;
 }
 
 destroy_body :: (body: *Body) {
-    World_destroy_body(body.data);
+    World_destroy_body(world, body.data);
 }
 
 add_polygon :: (body: *Body, polygon: [] Vector2, density: float = 1, friction: float = 0, restitution: float = 0) {
@@ -94,26 +96,32 @@ remove_polygon :: (body: *Body, poylgon: [] Vector2) {
 
 add_circle :: (body: *Body, center: Vector2, radius: float, density: float = 1, friction: float = 0, restitution: float = 0) {
     assert(false, "Circles are not yet supported.");
+    // TODO dont forget world_scale
 }
 
 remove_circle :: (body: *Body, center: Vector2, radius: float) {
     assert(false, "Circles are not yet supported.");
+    // TODO dont forget world_scale
 }
 
 get_position :: (body: Body) -> Vector2 {
-    return << Body_get_position(body.data);
+    position := << Body_get_position(body.data);
+    return position * world_scale;
 }
 
 set_position :: (body: *Body, position: Vector2) {
-    Body_set_transform(body.data, *position, Body_get_angle(body));
+    new := position / world_scale;
+    Body_set_transform(body.data, *new, Body_get_angle(body.data));
 }
 
 get_velocity :: (body: Body) -> Vector2 {
-    return << Body_get_linear_velocity(body.data);
+    velocity := << Body_get_linear_velocity(body.data);
+    return velocity * world_scale;
 }
 
 set_velocity :: (body: *Body, velocity: Vector2) {
-    Body_set_linear_velocity(body.data, *velocity);
+    new := velocity / world_scale;
+    Body_set_linear_velocity(body.data, *new);
 }
 
 get_rotation :: (body: Body) -> float {
@@ -121,7 +129,7 @@ get_rotation :: (body: Body) -> float {
 }
 
 set_rotation :: (body: *Body, rotation: float) {
-    Body_set_transform(body.data, Body_get_position(body), rotation);
+    Body_set_transform(body.data, Body_get_position(body.data), rotation);
 }
 
 get_rotational_velocity :: (body: Body) -> float {
@@ -133,27 +141,35 @@ set_rotational_velocity :: (body: *Body, rotational_velocity: float) {
 }
 
 get_world_center_of_mass :: (body: Body) -> Vector2 {
-    return << Body_get_world_center(body.data);
+    position := << Body_get_world_center(body.data);
+    return position * world_scale;
 }
 
 get_local_center_of_mass :: (body: Body) -> Vector2 {
-    return << Body_get_local_center(body.data);
+    position := << Body_get_local_center(body.data);
+    return position * world_scale;
 }
 
 apply_force :: (body: *Body, force: Vector2) {
-    Body_apply_force_to_center(body.data, *force, true);
+    new := force / world_scale;
+    Body_apply_force_to_center(body.data, *new, true);
 }
 
 apply_force :: (body: *Body, force: Vector2, local_point: Vector2) {
-    Body_apply_force(body.data, *force, *local_point, true);
+    new_force := force / world_scale;
+    new_point := local_point / world_scale;
+    Body_apply_force(body.data, *new_force, *new_point, true);
 }
 
 apply_linear_impulse :: (body: *Body, impulse: Vector2) {
-    Body_apply_linear_impulse_to_center(body.data, *impulse, true);
+    new := impulse / world_scale;
+    Body_apply_linear_impulse_to_center(body.data, *new, true);
 }
 
 apply_linear_impulse :: (body: *Body, impulse: Vector2, local_point: Vector2) {
-    Body_apply_linear_impulse(body.data, *impulse, *local_point, true);
+    new_impulse := impulse / world_scale;
+    new_point := local_point / world_scale;
+    Body_apply_linear_impulse(body.data, *new_impulse, *new_point, true);
 }
 
 apply_torque :: (body: *Body, torque: float) {
@@ -205,12 +221,12 @@ get_fixed_rotation :: (body: Body) -> bool {
 }
 
 set_fixed_rotation :: (body: *Body, fixed: bool) {
-    Body_set_fixed_rotation(body, fixed);
+    Body_set_fixed_rotation(body.data, fixed);
 }
 
 get_body_type :: (body: Body) -> BodyType {
     type := Body_get_type(body.data);
-    if type == #complete {
+    if #complete type == {
         case .b2_staticBody;
             return .Static;
         case .b2_kinematicBody;
@@ -222,7 +238,7 @@ get_body_type :: (body: Body) -> BodyType {
 
 set_body_type :: (body: *Body, type: BodyType) {
     type: b2BodyType;
-    if type == #complete {
+    if #complete type == {
         case .Static;
             type = .b2_staticBody;
         case .Kinematic;
@@ -231,7 +247,7 @@ set_body_type :: (body: *Body, type: BodyType) {
             type = .b2_dynamicBody;
     }
 
-    Body_set_type(body, type);
+    Body_set_type(body.data, type);
 }
 
 get_collision_flags :: (body: Body) -> u64 {
@@ -251,25 +267,29 @@ get_collision_bodies :: (body: Body) -> [] *Body {
 }
 
 get_linear_velocity_at_world_point :: (body: Body, world_point: Vector2) -> Vector2 {
-    return Body_get_linear_velocity_from_world_point(body.data, *world_point);
+    return Body_get_linear_velocity_from_world_point(body.data, *world_point) * world_scale;
 }
 
 get_linear_velocity_at_local_point :: (body: Body, local_point: Vector2) -> Vector2 {
-    return Body_get_linear_velocity_from_local_point(body.data, *local_point);
+    return Body_get_linear_velocity_from_local_point(body.data, *local_point) * world_scale;
 }
 
 get_world_point :: (body: Body, local_point: Vector2) -> Vector2 {
-    return Body_get_world_point(body.data, *local_point);
+    new := local_point / world_scale;
+    return Body_get_world_point(body.data, *new) * world_scale;
 }
 
 get_local_point :: (body: Body, world_point: Vector2) -> Vector2 {
-    return Body_get_local_point(body.data, *world_point);
+    new := world_point / world_scale;
+    return Body_get_local_point(body.data, *new) * world_scale;
 }
 
 get_world_vector :: (body: Body, local_vector: Vector2) -> Vector2 {
-    return Body_get_world_vector(body.data, *local_vector);
+    new := local_vector / world_scale;
+    return Body_get_world_vector(body.data, *new) * world_scale;
 }
 
 get_local_vector :: (body: Body, world_vector: Vector2) -> Vector2 {
-    return Body_get_local_vector(body.data, *world_vector);
+    new := world_vector / world_scale;
+    return Body_get_local_vector(body.data, *new) * world_scale;
 }

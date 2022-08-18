@@ -21,7 +21,7 @@ get_valid_polygons :: (polygon: [] Vector2) -> [..] FixedPolygon(b2_maxPolygonVe
                         fixed: FixedPolygon(b2_maxPolygonVertices);
                         fixed.count = divided.count;
                         for i: 0..divided.count - 1 {
-                            fixed.vertices[i] = divided[i];
+                            fixed.vertices[i] = divided[i] / world_scale;
                         }
 
                         array_add(*valid, fixed);
@@ -30,7 +30,7 @@ get_valid_polygons :: (polygon: [] Vector2) -> [..] FixedPolygon(b2_maxPolygonVe
                     fixed: FixedPolygon(b2_maxPolygonVertices);
                     fixed.count = convex.count;
                     for i: 0..convex.count - 1 {
-                        fixed.vertices[i] = convex[i];
+                        fixed.vertices[i] = convex[i] / world_scale;
                     }
 
                     array_add(*valid, fixed);
@@ -52,7 +52,7 @@ get_valid_polygons :: (polygon: [] Vector2) -> [..] FixedPolygon(b2_maxPolygonVe
                     fixed: FixedPolygon(b2_maxPolygonVertices);
                     fixed.count = divided.count;
                     for i: 0..divided.count - 1 {
-                        fixed.vertices[i] = divided[i];
+                        fixed.vertices[i] = divided[i] / world_scale;
                     }
 
                     array_add(*valid, fixed);
@@ -61,7 +61,7 @@ get_valid_polygons :: (polygon: [] Vector2) -> [..] FixedPolygon(b2_maxPolygonVe
                 fixed: FixedPolygon(b2_maxPolygonVertices);
                 fixed.count = convex.count;
                 for i: 0..convex.count - 1 {
-                    fixed.vertices[i] = convex[i];
+                    fixed.vertices[i] = convex[i] / world_scale;
                 }
 
                 array_add(*valid, fixed);

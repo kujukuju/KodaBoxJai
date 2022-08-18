@@ -8,7 +8,7 @@ FixedPolygon :: struct (size: int) {
     count: int;
 }
 
-initialize :: ();
+koda_box_init :: ();
 get_gravity :: () -> Vector2;
 set_gravity :: (gravity: Vector2);
 ```
