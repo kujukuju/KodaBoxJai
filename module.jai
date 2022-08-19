@@ -19,10 +19,12 @@ world_scale: float = 100.0;
 debug_draw: *b2Draw;
 contact_listener: *b2ContactListener;
 
+allocated_bodies: BlockAllocator(Body);
 tracked_bodies: [..] *b2Body;
 tracked_collisions: [..] TrackedCollision;
 
 #import "JaiBox2DAuto";
 #import "JaiMath";
+#import "BlockAllocatorJai";
 #import "Math";
 #import "Basic";

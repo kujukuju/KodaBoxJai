@@ -28,8 +28,15 @@ set_scale :: (scale: float) {
 
 step_physics :: (delta: float) {
     // TODO auto set tracked/dynamic bodies to bullets or not bullets based on radius and speed
+    for *body: allocated_bodies {
+        update_dirty(body);
+    }
 
     b2World.Step(world, delta / 1000.0, 8, 3);
+
+    for *body: allocated_bodies {
+        update_values(body);
+    }
 
     update_contacts();
 }
