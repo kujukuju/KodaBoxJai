@@ -8,11 +8,12 @@ koda_box_init :: () {
 }
 
 get_gravity :: () -> Vector2 {
-    return World_get_gravity(world);
+    return World_get_gravity(world) * world_scale;
 }
 
 set_gravity :: (gravity: Vector2) {
-    World_set_gravity(world, *gravity);
+    new := gravity / world_scale;
+    World_set_gravity(world, *new);
 }
 
 get_scale :: () -> float {
@@ -21,4 +22,8 @@ get_scale :: () -> float {
 
 set_scale :: (scale: float) {
     world_scale = scale;
+}
+
+step_physics :: (delta: float) {
+    World_step(world, delta / 1000.0, 8, 3, 0);
 }
