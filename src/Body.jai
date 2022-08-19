@@ -8,6 +8,10 @@ Body :: struct {
     data: *b2Body;
 }
 
+operator == :: (a: Body, b: Body) -> bool {
+    return a.data == b.data;
+}
+
 create_body :: (type: BodyType) -> Body {
     assert(!!world, "You must initialize the library before doing anything.");
 
@@ -27,11 +31,14 @@ create_body :: (type: BodyType) -> Body {
     body: Body;
     body.data = b2World.CreateBody(world, *body_def);
 
+    array_add(*tracked_bodies, body.data);
+
     return body;
 }
 
 destroy_body :: (body: *Body) {
-    // b2Body.Destructor(body.data);
+    array_ordered_remove_by_value(*tracked_bodies, body.data);
+
     b2World.DestroyBody(world, body.data);
 }
 
@@ -312,12 +319,36 @@ set_collision_flags :: (body: *Body, flags: u64) {
 
 }
 
-get_collision_normals :: (body: Body) -> [] Vector2 {
+get_collision_normals :: (body: Body) -> [..] Vector2 {
+    normals: [..] Vector2;
+    for collision: tracked_collisions {
+        if collision.body_a == body.data {
+            array_add(*normals, -collision.normal);
+        } else if collision.body_b == body.data {
+            array_add(*normals, collision.normal);
+        }
+    }
 
+    return normals;
 }
 
-get_collision_bodies :: (body: Body) -> [] *Body {
+get_collision_bodies :: (body: Body) -> [..] Body {
+    bodies: [..] Body;
+    for collision: tracked_collisions {
+        if collision.body_a == body.data {
+            body: Body;
+            body.data = collision.body_b;
 
+            array_add(*bodies, body);
+        } else if collision.body_b == body.data {
+            body: Body;
+            body.data = collision.body_a;
+
+            array_add(*bodies, body);
+        }
+    }
+
+    return bodies;
 }
 
 get_linear_velocity_at_world_point :: (body: Body, world_point: Vector2) -> Vector2 {

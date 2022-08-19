@@ -6,6 +6,8 @@ koda_box_init :: () {
 
     world = New(b2World);
     b2World.Constructor(world, Vector2.{0, 0});
+
+    create_contact_listener();
 }
 
 get_gravity :: () -> Vector2 {
@@ -25,5 +27,9 @@ set_scale :: (scale: float) {
 }
 
 step_physics :: (delta: float) {
+    // TODO auto set tracked/dynamic bodies to bullets or not bullets based on radius and speed
+
     b2World.Step(world, delta / 1000.0, 8, 3);
+
+    update_contacts();
 }
