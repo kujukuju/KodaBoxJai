@@ -66,7 +66,7 @@ set_body_type :: (body: *Body, type: BodyType);
 get_collision_flags :: (body: Body) -> u64;
 set_collision_flags :: (body: *Body, flags: u64);
 get_collision_normals :: (body: Body) -> [] Vector2; // implement
-get_collision_bodies :: (body: Body) -> [] *Body; // implement
+get_collision_bodies :: (body: Body) -> [] Body; // implement
 get_linear_velocity_at_world_point :: (body: Body, world_point: Vector2) -> Vector2;
 get_linear_velocity_at_local_point :: (body: Body, local_point: Vector2) -> Vector2;
 get_world_point :: (body: Body, local_point: Vector2) -> Vector2;

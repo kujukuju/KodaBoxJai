@@ -37,7 +37,11 @@ add_polygon :: (body: *Body, polygon: [] Vector2, density: float = 1, friction: 
     valid_polygons := get_valid_polygons(polygon);
     defer array_free(valid_polygons);
 
-    print("valid %\n", valid_polygons);
+    for *valid_polygon: valid_polygons {
+        for *vertex: valid_polygon.vertices {
+            << vertex /= world_scale;
+        }
+    }
 
     for valid_polygon: valid_polygons {
         fixture_def := FixtureDef_create();
@@ -53,15 +57,29 @@ add_polygon :: (body: *Body, polygon: [] Vector2, density: float = 1, friction: 
     }
 }
 
-remove_polygon :: (body: *Body, poylgon: [] Vector2) {
+remove_polygon :: (body: *Body, polygon: [] Vector2) {
     valid_polygons := get_valid_polygons(polygon);
     defer array_free(valid_polygons);
+
+    // box2d sometimes reverses the vertices in my polygons when I set the shape, and sometimes shifts the order offsets
+    // so I'm just going to duplicate it and then check
+    for *valid_polygon: valid_polygons {
+        polygon_shape := PolygonShape_create();
+        PolygonShape_set(*polygon_shape, valid_polygon.vertices.data, xx valid_polygon.count);
+        valid_polygon.vertices = polygon_shape.m_vertices;
+
+        for *vertex: valid_polygon.vertices {
+            << vertex /= world_scale;
+        }
+    }
 
     removed_list := NewArray(valid_polygons.count, bool);
     defer array_free(removed_list);
 
-    fixture := Body_get_fixture_list();
+    fixture := Body_get_fixture_list(body.data);
     while fixture != null {
+        defer fixture = Fixture_get_next(fixture);
+
         shape := Fixture_get_shape(fixture);
         if !shape {
             continue;
@@ -71,13 +89,13 @@ remove_polygon :: (body: *Body, poylgon: [] Vector2) {
         }
 
         polygon_shape := cast(*b2PolygonShape) shape;
-        print("checking vertices %\n", polygon_shape.m_vertices);
+        fixed_vertices := fixed_polygon(polygon_shape.m_vertices, polygon_shape.m_count);
         for i: 0..valid_polygons.count - 1 {
             if removed_list[i] {
                 continue;
             }
 
-            if valid_polygons[i].vertices == polygon_shape.m_vertices {
+            if valid_polygons[i] == fixed_vertices {
                 Body_destroy_fixture(body.data, fixture);
                 removed_list[i] = true;
 
@@ -87,23 +105,50 @@ remove_polygon :: (body: *Body, poylgon: [] Vector2) {
                 }
             }
         }
-
-        fixture = Fixture_get_next(fixture);
     }
 
-    if contains(removed_list, false) {
-        print("Unable to remove all requested polygons.\n%\n%\n", removed_list, valid_polygons);
-    }
+    print("Unable to remove all requested polygons.\n%\n%\n", removed_list, valid_polygons);
 }
 
 add_circle :: (body: *Body, center: Vector2, radius: float, density: float = 1, friction: float = 0, restitution: float = 0) {
-    assert(false, "Circles are not yet supported.");
-    // TODO dont forget world_scale
+    fixture_def := FixtureDef_create();
+    fixture_def.density = density;
+    fixture_def.friction = friction;
+    fixture_def.restitution = restitution;
+
+    circle_shape := CircleShape_create();
+    circle_shape.m_radius = radius / world_scale;
+    circle_shape.m_p = center / world_scale;
+
+    fixture_def.shape = *circle_shape;
+
+    Body_create_fixture(body.data, *fixture_def);
 }
 
 remove_circle :: (body: *Body, center: Vector2, radius: float) {
-    assert(false, "Circles are not yet supported.");
-    // TODO dont forget world_scale
+    new_center := center / world_scale;
+    new_radius := radius / world_scale;
+
+    fixture := Body_get_fixture_list(body.data);
+    while fixture != null {
+        defer fixture = Fixture_get_next(fixture);
+
+        shape := Fixture_get_shape(fixture);
+        if !shape {
+            continue;
+        }
+        if shape.m_type != .e_circle {
+            continue;
+        }
+
+        circle_shape := cast(*b2CircleShape) shape;
+        if circle_shape.m_p == new_center && circle_shape.m_radius == new_radius {
+            Body_destroy_fixture(body.data, fixture);
+            return;
+        }
+    }
+
+    print("Unable to remove requested circle.\n% %\n", center, radius);
 }
 
 get_position :: (body: Body) -> Vector2 {

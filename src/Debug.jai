@@ -75,14 +75,14 @@ draw_circle :: (center: Vector2, radius: float32, color: b2Color) #c_call {
     }
 }
 
-draw_solid_circle :: (center: Vector2, radius: float32, color: b2Color) #c_call {
+draw_solid_circle :: (center: Vector2, radius: float32, axis: Vector2, color: b2Color) #c_call {
     new_context: Context;
     push_context new_context {
         koda_color: Koda.Color;
-        koda_color.r = color.r / 255.0;
-        koda_color.g = color.g / 255.0;
-        koda_color.b = color.b / 255.0;
-        koda_color.a = color.a / 255.0;
+        koda_color.r = color.r;
+        koda_color.g = color.g;
+        koda_color.b = color.b;
+        koda_color.a = color.a;
 
         Koda.draw_ellipse(center, radius * 2, radius * 2, koda_color);
     }
