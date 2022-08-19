@@ -8,9 +8,9 @@
 
 world: *b2World;
 world_scale: float = 100.0;
-debug_draw: *Draw;
+debug_draw: *b2Draw;
 
-#import "JaiBox2D";
+#import "JaiBox2DAuto";
 #import "JaiMath";
 #import "Math";
 #import "Basic";

@@ -1,8 +1,11 @@
 set_draw_shapes :: (enabled: bool) {
     if enabled && !debug_draw {
         debug_draw = create_draw_struct();
-        World_set_debug_draw(world, debug_draw);
+        b2World.SetDebugDraw(world, debug_draw);
     } else if !enabled && debug_draw {
+        b2World.SetDebugDraw(world, null);
+        // TODO probably dont need to do this?
+        b2Draw.virtual_Destructor(debug_draw);
         free(debug_draw);
     }
 
@@ -14,21 +17,47 @@ draw_shapes :: () {
     defer Koda.koda.transform = old_transform;
 
     Koda.koda.transform = scale(Koda.koda.transform, xyz(world_scale, world_scale, world_scale));
-    World_debug_draw(world);
+    b2World.DebugDraw(world);
+    // World_debug_draw(world);
 }
 
 #scope_file
 
-create_draw_struct :: () -> *Draw {
-    draw := Draw_new(draw_polygon, draw_solid_polygon, draw_circle, draw_solid_circle, draw_particles, draw_segment, draw_transform, draw_point);
-    Draw_append_flags(draw, xx b2DrawFlags.e_shapeBit);
-    Draw_append_flags(draw, xx b2DrawFlags.e_centerOfMassBit);
-    Draw_append_flags(draw, xx b2DrawFlags.e_particleBit);
+create_draw_struct :: () -> *b2Draw {
+    draw := New(b2Draw);
+    print("made draw %\n", << draw);
+    vtable := New(b2Draw_VTable);
+    vtable.DrawPolygon = draw_polygon;
+    vtable.DrawSolidPolygon = draw_solid_polygon;
+    vtable.DrawCircle = draw_circle;
+    vtable.DrawSolidCircle = draw_solid_circle;
+    vtable.DrawSegment = draw_segment;
+    vtable.DrawTransform = draw_transform;
+    vtable.DrawPoint = draw_point;
+    draw.vtable = vtable;
+    b2Draw.Constructor(draw);
+    // draw.vtable.DrawPolygon = draw_polygon;
+    // draw.vtable.DrawSolidPolygon = draw_solid_polygon;
+    // draw.vtable = New(b2Draw_VTable);
+    // draw := Draw_new(draw_polygon, draw_solid_polygon, draw_circle, draw_solid_circle, draw_particles, draw_segment, draw_transform, draw_point);
+    b2Draw.AppendFlags(draw, xx b2Draw.e_2.shapeBit);
+    b2Draw.AppendFlags(draw, xx b2Draw.e_2.jointBit);
+    b2Draw.AppendFlags(draw, xx b2Draw.e_2.centerOfMassBit);
 
     return draw;
 }
 
-draw_polygon :: (vertices: *Vector2, vertexCount: s32, color: b2Color) #c_call {
+// vtable: b2Draw_VTable = .{
+//     DrawPolygon = draw_polygon,
+//     DrawSolidPolygon = draw_solid_polygon,
+//     DrawCircle = draw_circle,
+//     DrawSolidCircle = draw_solid_circle,
+//     DrawSegment = draw_segment,
+//     DrawTransform = draw_transform,
+//     DrawPoint = draw_point,
+// };
+
+draw_polygon :: (this: *b2Draw, vertices: *Vector2, vertexCount: s32, color: *b2Color) #cpp_method {
     new_context: Context;
     push_context new_context {
         koda_points: [] Vector2;
@@ -45,7 +74,7 @@ draw_polygon :: (vertices: *Vector2, vertexCount: s32, color: b2Color) #c_call {
     }
 }
 
-draw_solid_polygon :: (vertices: *Vector2, vertexCount: s32, color: b2Color) #c_call {
+draw_solid_polygon :: (this: *b2Draw, vertices: *Vector2, vertexCount: s32, color: *b2Color) #cpp_method {
     new_context: Context;
     push_context new_context {
         koda_points: [] Vector2;
@@ -62,7 +91,7 @@ draw_solid_polygon :: (vertices: *Vector2, vertexCount: s32, color: b2Color) #c_
     }
 }
 
-draw_circle :: (center: Vector2, radius: float32, color: b2Color) #c_call {
+draw_circle :: (this: *b2Draw, center: *Vector2, radius: float32, color: *b2Color) #cpp_method {
     new_context: Context;
     push_context new_context {
         koda_color: Koda.Color;
@@ -75,7 +104,7 @@ draw_circle :: (center: Vector2, radius: float32, color: b2Color) #c_call {
     }
 }
 
-draw_solid_circle :: (center: Vector2, radius: float32, axis: Vector2, color: b2Color) #c_call {
+draw_solid_circle :: (this: *b2Draw, center: *Vector2, radius: float32, axis: *Vector2, color: *b2Color) #cpp_method {
     new_context: Context;
     push_context new_context {
         koda_color: Koda.Color;
@@ -88,39 +117,51 @@ draw_solid_circle :: (center: Vector2, radius: float32, axis: Vector2, color: b2
     }
 }
 
-draw_particles :: (centers: *Vector2, radius: float32, colors: *b2ParticleColor, count: s32) #c_call {
-    new_context: Context;
-    push_context new_context {
-        koda_centers: [] Vector2;
-        koda_centers.data = centers;
-        koda_centers.count = count;
+draw_segment :: (this: *b2Draw, p1: *Vector2, p2: *Vector2, color: *b2Color) #cpp_method {
 
-        koda_colors: [] b2ParticleColor;
-        koda_colors.data = colors;
-        koda_colors.count = count;
-
-        for i: 0..count - 1 {
-            center := koda_centers[i];
-            color: Koda.Color;
-            if colors == null {
-                color.r = 1;
-                color.g = 1;
-                color.b = 1;
-                color.a = 1;
-            } else {
-                color.r = koda_colors[i].r / 255.0;
-                color.g = koda_colors[i].g / 255.0;
-                color.b = koda_colors[i].b / 255.0;
-                color.a = koda_colors[i].a / 255.0;
-            }
-
-            // Koda.draw_rect(center - radius, xy(radius, radius), color);
-            Koda.draw_ellipse(center, radius * 2 * 0.75, radius * 2 * 0.75, color);
-        }
-    }
 }
 
-draw_segment :: (p1: Vector2, p2: Vector2, color: b2Color) #c_call {
+draw_transform :: (this: *b2Draw, xf: *b2Transform) #cpp_method {
+
+}
+
+draw_point :: (this: *b2Draw, p: *Vector2, size: float, color: *b2Color) #cpp_method {
+
+}
+
+// draw_particles :: (this: *b2Draw, centers: *Vector2, radius: float32, colors: *b2ParticleColor, count: s32) #c_call {
+//     new_context: Context;
+//     push_context new_context {
+//         koda_centers: [] Vector2;
+//         koda_centers.data = centers;
+//         koda_centers.count = count;
+
+//         koda_colors: [] b2ParticleColor;
+//         koda_colors.data = colors;
+//         koda_colors.count = count;
+
+//         for i: 0..count - 1 {
+//             center := koda_centers[i];
+//             color: Koda.Color;
+//             if colors == null {
+//                 color.r = 1;
+//                 color.g = 1;
+//                 color.b = 1;
+//                 color.a = 1;
+//             } else {
+//                 color.r = koda_colors[i].r / 255.0;
+//                 color.g = koda_colors[i].g / 255.0;
+//                 color.b = koda_colors[i].b / 255.0;
+//                 color.a = koda_colors[i].a / 255.0;
+//             }
+
+//             // Koda.draw_rect(center - radius, xy(radius, radius), color);
+//             Koda.draw_ellipse(center, radius * 2 * 0.75, radius * 2 * 0.75, color);
+//         }
+//     }
+// }
+
+draw_segment :: (this: *b2Draw, p1: Vector2, p2: Vector2, color: b2Color) #c_call {
     new_context: Context;
     push_context new_context {
         koda_color: Koda.Color;
@@ -133,14 +174,14 @@ draw_segment :: (p1: Vector2, p2: Vector2, color: b2Color) #c_call {
     }
 }
 
-draw_transform :: (xf: b2Transform) #c_call {
+draw_transform :: (this: *b2Draw, xf: b2Transform) #c_call {
     new_context: Context;
     push_context new_context {
 
     }
 }
 
-draw_point :: (p: Vector2, size: float, color: b2Color) #c_call {
+draw_point :: (this: *b2Draw, p: Vector2, size: float, color: b2Color) #c_call {
     new_context: Context;
     push_context new_context {
         koda_color: Koda.Color;

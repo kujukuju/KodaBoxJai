@@ -4,16 +4,16 @@ koda_box_init :: () {
         assert(false, "We don't yet support this.");
     }
 
-    world = World_new(.{0, 0});
+    world = New(b2World);
+    b2World.Constructor(world, Vector2.{0, 0});
 }
 
 get_gravity :: () -> Vector2 {
-    return World_get_gravity(world) * world_scale;
+    return b2World.GetGravity(world);
 }
 
 set_gravity :: (gravity: Vector2) {
-    new := gravity / world_scale;
-    World_set_gravity(world, *new);
+    b2World.SetGravity(world, gravity);
 }
 
 get_scale :: () -> float {
@@ -25,5 +25,5 @@ set_scale :: (scale: float) {
 }
 
 step_physics :: (delta: float) {
-    World_step(world, delta / 1000.0, 8, 3, 0);
+    b2World.Step(world, delta / 1000.0, 8, 3);
 }
