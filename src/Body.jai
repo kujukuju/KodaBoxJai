@@ -160,7 +160,6 @@ remove_circle :: (body: *Body, center: Vector2, radius: float) {
 
 get_position :: (body: Body) -> Vector2 {
     position := << b2Body.GetPosition(body.data);
-    print("p %\n", position);
     return position * world_scale;
 }
 
