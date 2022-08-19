@@ -25,17 +25,16 @@ draw_shapes :: () {
 
 create_draw_struct :: () -> *b2Draw {
     draw := New(b2Draw);
-    print("made draw %\n", << draw);
-    vtable := New(b2Draw_VTable);
-    vtable.DrawPolygon = draw_polygon;
-    vtable.DrawSolidPolygon = draw_solid_polygon;
-    vtable.DrawCircle = draw_circle;
-    vtable.DrawSolidCircle = draw_solid_circle;
-    vtable.DrawSegment = draw_segment;
-    vtable.DrawTransform = draw_transform;
-    vtable.DrawPoint = draw_point;
-    draw.vtable = vtable;
     b2Draw.Constructor(draw);
+    // print("made draw %\n", draw.vtable);
+    draw.vtable = New(b2Draw_VTable);
+    draw.vtable.DrawPolygon = draw_polygon;
+    draw.vtable.DrawSolidPolygon = draw_solid_polygon;
+    draw.vtable.DrawCircle = draw_circle;
+    draw.vtable.DrawSolidCircle = draw_solid_circle;
+    draw.vtable.DrawSegment = draw_segment;
+    draw.vtable.DrawTransform = draw_transform;
+    draw.vtable.DrawPoint = draw_point;
     // draw.vtable.DrawPolygon = draw_polygon;
     // draw.vtable.DrawSolidPolygon = draw_solid_polygon;
     // draw.vtable = New(b2Draw_VTable);
