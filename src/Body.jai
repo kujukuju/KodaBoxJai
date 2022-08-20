@@ -417,7 +417,7 @@ set_transform :: (body: *Body, position: Vector2, rotation: float) {
 }
 
 set_awake :: (body: *Body, awake: bool) {
-    b2Body.SetAwake(body, awake);
+    b2Body.SetAwake(body.data, awake);
 }
 
 set_rotational_velocity :: (body: *Body, rotational_velocity: float) {
