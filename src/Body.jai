@@ -313,6 +313,116 @@ get_collision_bodies :: (body: Body) -> [..] Body {
     return bodies;
 }
 
+distance_to_body :: (body: Body, point: Vector2) -> float {
+    minimum_distance: float = FLOAT32_MAX;
+
+    fixture := b2Body.GetFixtureList(body.data);
+    while fixture != null {
+        defer fixture = b2Fixture.GetNext(fixture);
+
+        shape := b2Fixture.GetShape(fixture);
+        if !shape {
+            continue;
+        }
+
+        if shape.m_type == {
+            case .circle;
+                circle := cast(*b2CircleShape) shape;
+                world_center := b2Body.GetWorldPoint(body.data, circle.m_p) * world_scale;
+                radius := circle.m_radius * world_scale;
+
+                dist := distance(point, world_center);
+                if dist <= radius {
+                    return 0;
+                }
+
+                minimum_distance = min(minimum_distance, dist - radius);
+
+            case .polygon;
+                polygon := cast(*b2PolygonShape) shape;
+                fixed_polygon: FixedPolygon(b2_maxPolygonVertices);
+                fixed_polygon.count = polygon.m_count;
+                for i: 0..fixed_polygon.count - 1 {
+                    fixed_polygon.vertices[i] = b2Body.GetWorldPoint(body.data, polygon.m_vertices[i]) * world_scale;
+                }
+                reverse(*fixed_polygon);
+                fixed_view: [] Vector2;
+                fixed_view.data = fixed_polygon.vertices.data;
+                fixed_view.count = fixed_polygon.count;
+
+                if intersects(fixed_view, point) {
+                    return 0;
+                }
+
+                nearest := nearest_point(fixed_view, point);
+                minimum_distance = min(minimum_distance, distance(nearest, point));
+
+            case;
+                print("Unknown shape type. %\n", shape.m_type);
+        }
+    }
+
+    return minimum_distance;
+}
+
+nearest_point_on_body :: (body: Body, point: Vector2) -> Vector2 {
+    minimum_distance: float = FLOAT32_MAX;
+    minimum_point: Vector2;
+
+    fixture := b2Body.GetFixtureList(body.data);
+    while fixture != null {
+        defer fixture = b2Fixture.GetNext(fixture);
+
+        shape := b2Fixture.GetShape(fixture);
+        if !shape {
+            continue;
+        }
+
+        if shape.m_type == {
+            case .circle;
+                circle := cast(*b2CircleShape) shape;
+                center := b2Body.GetWorldPoint(body.data, circle.m_p) * world_scale;
+                radius := circle.m_radius * world_scale;
+
+                delta := point - center;
+                if length(delta) < 0.000001 {
+                    delta = .{1, 0};
+                }
+
+                nearest := normalize(delta) * radius + center;
+                dist := distance(nearest, point);
+                if dist < minimum_distance {
+                    minimum_distance = dist;
+                    minimum_point = nearest;
+                }
+
+            case .polygon;
+                polygon := cast(*b2PolygonShape) shape;
+                fixed_polygon: FixedPolygon(b2_maxPolygonVertices);
+                fixed_polygon.count = polygon.m_count;
+                for i: 0..fixed_polygon.count - 1 {
+                    fixed_polygon.vertices[i] = b2Body.GetWorldPoint(body.data, polygon.m_vertices[i]) * world_scale;
+                }
+                reverse(*fixed_polygon);
+                fixed_view: [] Vector2;
+                fixed_view.data = fixed_polygon.vertices.data;
+                fixed_view.count = fixed_polygon.count;
+
+                nearest := nearest_point(fixed_view, point);
+                dist := distance(nearest, point);
+                if dist < minimum_distance {
+                    minimum_distance = dist;
+                    minimum_point = nearest;
+                }
+
+            case;
+                print("Unknown shape type. %\n", shape.m_type);
+        }
+    }
+
+    return minimum_point;
+}
+
 #scope_module
 
 update_dirty :: (using body: *Body) {
@@ -424,50 +534,6 @@ set_rotational_velocity :: (body: *Body, rotational_velocity: float) {
     b2Body.SetAngularVelocity(body.data, rotational_velocity);
 }
 
-// get_world_center_of_mass :: (body: Body) -> Vector2 {
-//     position := << b2Body.GetWorldCenter(body.data);
-//     return position * world_scale;
-// }
-
-// get_local_center_of_mass :: (body: Body) -> Vector2 {
-//     position := << b2Body.GetLocalCenter(body.data);
-//     return position * world_scale;
-// }
-
-// apply_force :: (body: *Body, force: Vector2) {
-//     new := force / world_scale;
-//     b2Body.ApplyForceToCenter(body.data, *new, true);
-// }
-
-// apply_force :: (body: *Body, force: Vector2, local_point: Vector2) {
-//     new_force := force / world_scale;
-//     new_point := local_point / world_scale;
-//     b2Body.ApplyForce(body.data, *new_force, *new_point, true);
-// }
-
-// apply_linear_impulse :: (body: *Body, impulse: Vector2) {
-//     new := impulse / world_scale;
-//     b2Body.ApplyLinearImpulseToCenter(body.data, *new, true);
-// }
-
-// apply_linear_impulse :: (body: *Body, impulse: Vector2, local_point: Vector2) {
-//     new_impulse := impulse / world_scale;
-//     new_point := local_point / world_scale;
-//     b2Body.ApplyLinearImpulse(body.data, *new_impulse, *new_point, true);
-// }
-
-// apply_torque :: (body: *Body, torque: float) {
-//     b2Body.ApplyTorque(body.data, torque, true);
-// }
-
-// apply_angular_impulse :: (body: *Body, impulse: float) {
-//     b2Body.ApplyAngularImpulse(body.data, impulse, true);
-// }
-
-// get_mass :: (body: Body) -> float {
-//     return b2Body.GetMass(body.data);
-// }
-
 get_enabled :: (body: Body) -> bool {
     return b2Body.IsEnabled(body.data);
 }
@@ -547,33 +613,5 @@ set_collision_flags :: (body: *Body, self_collision_flags: u16, collision_flags:
         b2Fixture.SetFilterData(fixture, filter);
     }
 }
-
-// get_linear_velocity_at_world_point :: (body: Body, world_point: Vector2) -> Vector2 {
-//     return b2Body.GetLinearVelocityFromWorldPoint(body.data, *world_point) * world_scale;
-// }
-
-// get_linear_velocity_at_local_point :: (body: Body, local_point: Vector2) -> Vector2 {
-//     return b2Body.GetLinearVelocityFromLocalPoint(body.data, *local_point) * world_scale;
-// }
-
-// get_world_point :: (body: Body, local_point: Vector2) -> Vector2 {
-//     new := local_point / world_scale;
-//     return b2Body.GetWorldPoint(body.data, *new) * world_scale;
-// }
-
-// get_local_point :: (body: Body, world_point: Vector2) -> Vector2 {
-//     new := world_point / world_scale;
-//     return b2Body.GetLocalPoint(body.data, *new) * world_scale;
-// }
-
-// get_world_vector :: (body: Body, local_vector: Vector2) -> Vector2 {
-//     new := local_vector / world_scale;
-//     return b2Body.GetWorldVector(body.data, *new) * world_scale;
-// }
-
-// get_local_vector :: (body: Body, world_vector: Vector2) -> Vector2 {
-//     new := world_vector / world_scale;
-//     return b2Body.GetLocalVector(body.data, *new) * world_scale;
-// }
 
 #scope_export
