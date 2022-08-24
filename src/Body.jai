@@ -65,15 +65,22 @@ create_body :: (type: BodyType) -> *Body {
     body.collision_flags = 0xffff;
     body.dirty_collision_flags_ = 0xffff;
 
-    array_add(*tracked_bodies, body.data);
+    array_add(*tracked_bodies, body);
 
     return body;
 }
 
 destroy_body :: (body: *Body) {
-    array_ordered_remove_by_value(*tracked_bodies, body.data);
+    if !body.data {
+        print("Tried to remove a body that was already deleted. %\n", body);
+        return;
+    }
 
+    release(*allocated_bodies, body);
     b2World.DestroyBody(world, body.data);
+    array_ordered_remove_by_value(*tracked_bodies, body);
+
+    body.data = null;
 }
 
 add_polygon :: (body: *Body, polygon: [] Vector2, density: float = 1, friction: float = 0, restitution: float = 0) {
@@ -284,9 +291,9 @@ get_local_vector :: (body: Body, world_vector: Vector2) -> Vector2 {
 get_collision_normals :: (body: Body) -> [..] Vector2 {
     normals: [..] Vector2;
     for collision: tracked_collisions {
-        if collision.body_a == body.data {
+        if collision.body_a.data == body.data {
             array_add(*normals, -collision.normal);
-        } else if collision.body_b == body.data {
+        } else if collision.body_b.data == body.data {
             array_add(*normals, collision.normal);
         }
     }
@@ -294,19 +301,13 @@ get_collision_normals :: (body: Body) -> [..] Vector2 {
     return normals;
 }
 
-get_collision_bodies :: (body: Body) -> [..] Body {
-    bodies: [..] Body;
+get_collision_bodies :: (body: Body) -> [..] *Body {
+    bodies: [..] *Body;
     for collision: tracked_collisions {
-        if collision.body_a == body.data {
-            body: Body;
-            body.data = collision.body_b;
-
-            array_add(*bodies, body);
-        } else if collision.body_b == body.data {
-            body: Body;
-            body.data = collision.body_a;
-
-            array_add(*bodies, body);
+        if collision.body_a.data == body.data {
+            array_add(*bodies, collision.body_b);
+        } else if collision.body_b.data == body.data {
+            array_add(*bodies, collision.body_a);
         }
     }
 

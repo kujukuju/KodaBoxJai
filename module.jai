@@ -9,8 +9,8 @@
 
 TrackedCollision :: struct {
     contact: *b2Contact;
-    body_a: *b2Body;
-    body_b: *b2Body;
+    body_a: *Body;
+    body_b: *Body;
     normal: Vector2;
 }
 
@@ -20,8 +20,18 @@ debug_draw: *b2Draw;
 contact_listener: *b2ContactListener;
 
 allocated_bodies: BlockAllocator(Body, 1024);
-tracked_bodies: [..] *b2Body;
+tracked_bodies: [..] *Body;
 tracked_collisions: [..] TrackedCollision;
+
+get_body_from_physics_body :: (physics_body: *b2Body) -> *Body {
+    for *body: allocated_bodies {
+        if body.data == physics_body {
+            return body;
+        }
+    }
+
+    return null;
+}
 
 #import "JaiBox2DAuto";
 #import "JaiMath";

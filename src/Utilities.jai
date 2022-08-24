@@ -96,7 +96,6 @@ get_valid_polygons :: (polygon: [] Vector2) -> [..] FixedPolygon(b2_maxPolygonVe
     return valid;
 }
 
-
 contains :: (list: [] $T, b: T) -> bool {
     for entry: list {
         if entry == b {
@@ -105,4 +104,25 @@ contains :: (list: [] $T, b: T) -> bool {
     }
 
     return false;
+}
+
+contains :: (list: [] $A, $convert: (a: A) -> $B, b: B) -> bool {
+    for entry: list {
+        if convert(entry) == b {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+find :: (list: [] $A, $convert: (a: A) -> $B, b: B) -> A, bool {
+    for entry: list {
+        if convert(entry) == b {
+            return entry, true;
+        }
+    }
+    
+    empty: A;
+    return empty, false;
 }

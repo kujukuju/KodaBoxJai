@@ -27,18 +27,17 @@ update_contacts :: () {
 begin_contact :: (this: *b2ContactListener, contact: *b2Contact) #cpp_method {
     new_context: Context;
     push_context new_context {
-        should_track := false;
-        should_track = should_track || (contact.m_fixtureA && contact.m_fixtureA.m_body && contains(tracked_bodies, contact.m_fixtureA.m_body));
-        should_track = should_track || (contact.m_fixtureB && contact.m_fixtureB.m_body && contains(tracked_bodies, contact.m_fixtureB.m_body));
-        if should_track {
+        convert_body :: (a: *Body) -> *b2Body {
+            return a.data;
+        }
+
+        body_a := ifx contact.m_fixtureA && contact.m_fixtureA.m_body then find(tracked_bodies, convert_body, contact.m_fixtureA.m_body) else null;
+        body_b := ifx contact.m_fixtureB && contact.m_fixtureB.m_body then find(tracked_bodies, convert_body, contact.m_fixtureB.m_body) else null;
+        if body_a || body_b {
             collision: TrackedCollision;
             collision.contact = contact;
-            if contact.m_fixtureA && contact.m_fixtureA.m_body {
-                collision.body_a = contact.m_fixtureA.m_body;
-            }
-            if contact.m_fixtureB && contact.m_fixtureB.m_body {
-                collision.body_b = contact.m_fixtureB.m_body;
-            }
+            collision.body_a = body_a;
+            collision.body_b = body_b;
 
             world_manifold: b2WorldManifold;
             b2Contact.GetWorldManifold(contact, *world_manifold);
