@@ -92,6 +92,10 @@ get_bodies_at_point :: (point: Vector2) -> [..] *Body {
 }
 
 get_body_at_line :: (line: Line2) -> *Body {
+    if distance(line.p1, line.p2) == 0 {
+        return get_body_at_point(line.p1);
+    }
+
     vtable: b2RayCastCallback_VTable;
     vtable.ReportFixture = (this: *b2RayCastCallback, fixture: *b2Fixture, point: *b2Vec2, normal: *b2Vec2, fraction: float) -> float #cpp_method {
         new_context: Context;
@@ -123,6 +127,10 @@ get_body_at_line :: (line: Line2) -> *Body {
 }
 
 get_bodies_at_line :: (line: Line2) -> [..] *Body {
+    if distance(line.p1, line.p2) == 0 {
+        return get_bodies_at_point(line.p1);
+    }
+    
     vtable: b2RayCastCallback_VTable;
     vtable.ReportFixture = (this: *b2RayCastCallback, fixture: *b2Fixture, point: *b2Vec2, normal: *b2Vec2, fraction: float) -> float #cpp_method {
         new_context: Context;
