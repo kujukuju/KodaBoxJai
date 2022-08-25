@@ -172,11 +172,11 @@ get_body_potentially_in_aabb :: (aabb: AABB2) -> *Body {
     callback: QueryCallback;
     callback.vtable = *vtable;
 
-    aabb: b2AABB;
-    aabb.lowerBound = aabb.lower / world_scale;
-    aabb.upperBound = aabb.upper / world_scale;
+    b2aabb: b2AABB;
+    b2aabb.lowerBound = aabb.lower / world_scale;
+    b2aabb.upperBound = aabb.upper / world_scale;
 
-    b2World.QueryAABB(world, *callback, *aabb);
+    b2World.QueryAABB(world, *callback, *b2aabb);
 
     return callback.body;
 }
@@ -200,11 +200,11 @@ get_bodies_potentially_in_aabb :: (aabb: AABB2) -> [..] *Body {
     callback: QueryCallback;
     callback.vtable = *vtable;
 
-    aabb: b2AABB;
-    aabb.lowerBound = aabb.lower / world_scale;
-    aabb.upperBound = aabb.upper / world_scale;
+    b2aabb: b2AABB;
+    b2aabb.lowerBound = aabb.lower / world_scale;
+    b2aabb.upperBound = aabb.upper / world_scale;
 
-    b2World.QueryAABB(world, *callback, *aabb);
+    b2World.QueryAABB(world, *callback, *b2aabb);
 
     return callback.bodies;
 }
