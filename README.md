@@ -1,3 +1,26 @@
+## KodaBoxJai
+
+This is a somewhat experimental library that wraps box2d in more simple to use functions **and proabbly slightly reduces performance**.
+
+This library keeps track of all bodies and updates bodies based on their modified values.
+
+## Dependencies
+
+Put these in your project import path.
+
+https://github.com/kujukuju/JaiBox2DAuto
+
+https://github.com/kujukuju/JaiMath
+
+https://github.com/kujukuju/BlockAllocatorJai
+
+## Optional graphical dependencies (maybe)
+
+I don't know what happens if you try to run without this. But it should work. This is used to render debug shapes.
+
+https://github.com/kujukuju/KodaJai
+
+
 ## Setup
 Just `#import "KodaBoxJai";`. 
 
@@ -13,12 +36,18 @@ get_gravity :: () -> Vector2;
 set_gravity :: (gravity: Vector2);
 get_scale :: () -> float;
 set_scale :: (scale: float);
+get_body_potentially_at_point :: (point: Vector2) -> *Body;
+get_bodies_potentially_at_point :: (point: Vector2) -> [..] *Body;
 get_body_at_point :: (point: Vector2) -> *Body;
 get_bodies_at_point :: (point: Vector2) -> [..] *Body;
 get_body_at_line :: (line: Line2) -> *Body;
 get_bodies_at_line :: (line: Line2) -> [..] *Body;
+get_body_potentially_in_aabb :: (aabb: AABB2) -> *Body;
+get_bodies_potentially_in_aabb :: (aabb: AABB2) -> [..] *Body;
 get_body_in_aabb :: (aabb: AABB2) -> *Body;
 get_bodies_in_aabb :: (aabb: AABB2) -> [..] *Body;
+get_body_in_circle :: (center: Vector2, radius: float) -> *Body;
+get_bodies_in_circle :: (center: Vector2, radius: float) -> [..] *Body;
 step_physics :: (delta: float);
 ```
 
