@@ -33,7 +33,7 @@ get_body_from_physics_body :: (physics_body: *b2Body) -> *Body {
     return null;
 }
 
-#import "JaiBox2DAuto";
+#import "JaiBox2D";
 #import "JaiMath";
 #import "BlockAllocatorJai";
 #import "Math";

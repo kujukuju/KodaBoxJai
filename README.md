@@ -1,6 +1,6 @@
 ## KodaBoxJai
 
-This is a somewhat experimental library that wraps box2d in more simple to use functions **and proabbly slightly reduces performance**.
+This is a somewhat experimental library that wraps box2d in more simple to use functions **and probably slightly reduces performance**.
 
 This library keeps track of all bodies and updates bodies based on their modified values.
 
