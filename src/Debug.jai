@@ -5,16 +5,20 @@ set_draw_shapes :: (enabled: bool) {
     } else if !enabled && debug_draw {
         b2World.SetDebugDraw(world, null);
         free(debug_draw);
+        debug_draw = null;
     }
 }
 
 draw_shapes :: () {
-    old_transform := Koda.koda.transform;
-    defer Koda.koda.transform = old_transform;
+    old_view := Koda.koda.view;
+    defer Koda.koda.view = old_view;
 
-    Koda.koda.transform = scale(Koda.koda.transform, xyz(world_scale, world_scale, world_scale));
+    cull_face := Koda.get_cull_face();
+    defer Koda.set_cull_face(cull_face);
+    Koda.set_cull_face(false);
+
+    Koda.koda.view = scale(Koda.koda.view, xyz(world_scale, world_scale, world_scale));
     b2World.DebugDraw(world);
-    // World_debug_draw(world);
 }
 
 #scope_file
